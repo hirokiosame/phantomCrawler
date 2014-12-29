@@ -1,0 +1,32 @@
+{
+  "name": "phantomCrawler",
+  "version": "1.0.0",
+  "description": "JS bridge to crawl specific information using PhantomJS",
+  "main": "phantom.js",
+  "dependencies": {
+    "node-phantom-simple": "^1.2.0",
+    "node-phantom": "^0.2.5",
+    "node-phantom-ws": "^1.0.10",
+    "phantom": "^0.7.1",
+    "ws": "^0.6.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hirokiosame/phantomCrawler.git"
+  },
+  "keywords": [
+    "phantom",
+    "node",
+    "crawler"
+  ],
+  "author": "Hiroki Osame",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hirokiosame/phantomCrawler/issues"
+  },
+  "homepage": "https://github.com/hirokiosame/phantomCrawler"
+}
