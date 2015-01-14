@@ -16,7 +16,7 @@ module.exports = (function(){
 
 		server = http.createServer(function (req, res){
 			res.writeHead(200, { "Content-Type": "text/html" });
-			res.end(require("fs").readFileSync("./feSocket.js").toString().replace("serverPort", serverPort));
+			res.end(require("fs").readFileSync(__dirname + "/feSocket.js").toString().replace("serverPort", serverPort));
 		})
 
 		.on("error", function(err){
