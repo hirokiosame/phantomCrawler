@@ -2,7 +2,6 @@ module.exports = function(serverPort){
 
 	var page = browser.create();
 
-
 		// Wait for request...
 		page.onCallback = function(request){
 
