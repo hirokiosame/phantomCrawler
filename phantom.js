@@ -85,8 +85,7 @@ module.exports = (function(){
 	}
 
 	function spawnPhantom(serverPort, callback){
-		console.log("Directory name", __dirname);
-		var proc = spawn('phantomjs', ['--ssl-protocol=any', './phantomCode.js', serverPort ]);
+		var proc = spawn('phantomjs', ['--ssl-protocol=any', __dirname + '/phantomCode.js', serverPort ]);
 
 		proc.stdout.on('data', function (data){
 			console.log("Phantom:", data.toString());
