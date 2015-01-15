@@ -89,15 +89,15 @@ module.exports = (function(){
 		var proc = spawn('phantomjs', ['--ssl-protocol=any', __dirname + '/phantomCode.js', serverPort ]);
 
 		proc.stdout.on('data', function (data){
-			console.log("Phantom:", data.toString());
+			console.log(process.pid, "Phantom:", data.toString());
 		});
 
 		proc.stderr.on('data', function (data){
-			console.log("Phantom Error:\t", data.toString());
+			console.log(process.pid, "Phantom Error:\t", data.toString());
 		});
 
 		proc.on('close', function (code, signal){
-			console.log('child process exited with code', arguments);
+			console.log(process.pid, 'child process exited with code', arguments);
 
 			// // code === 1
 
