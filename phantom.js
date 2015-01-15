@@ -9,6 +9,7 @@ module.exports = (function(){
 
 
 	var server, serverPort;
+	
 	function initHTTPServer( port, callback ){
 
 		// If server is already running
@@ -125,8 +126,6 @@ module.exports = (function(){
 	}
 
 
-
-
 	return function init( callback, port ){
 
 		port = port || 0;
@@ -134,7 +133,7 @@ module.exports = (function(){
 		// Initialize HTTP Server
 		initHTTPServer(port, function(err, server, serverPort){
 
-			console.log("HTTP Server ready", serverPort);
+			// console.log("HTTP Server ready", serverPort);
 
 			// Initialize websocket
 			initWebSocket(
