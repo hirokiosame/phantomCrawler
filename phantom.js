@@ -85,15 +85,23 @@ module.exports = (function(){
 		initialized();
 	}
 
-	function spawnPhantom(serverPort, callback){
+	function spawnPhantom(serverPort, processLogger){
 		var proc = spawn('phantomjs', ['--ssl-protocol=any', __dirname + '/phantomCode.js', serverPort ]);
 
 		proc.stdout.on('data', function (data){
-			console.log(process.pid, "Phantom:", data.toString());
+			if( typeof processLogger !== "function" ){ return; }
+			processLogger({
+				type: "stdout",
+				std: data
+			});	
 		});
 
 		proc.stderr.on('data', function (data){
-			console.log(process.pid, "Phantom Error:\t", data.toString());
+			if( typeof processLogger !== "function" ){ return; }
+			processLogger({
+				type: "stderr",
+				std: data
+			});	
 		});
 
 		proc.on('close', function (code, signal){
@@ -126,7 +134,7 @@ module.exports = (function(){
 	}
 
 
-	return function init( callback, port ){
+	return function init( processLogger, callback, port ){
 
 		port = port || 0;
 
@@ -141,7 +149,7 @@ module.exports = (function(){
 				function initialized(){
 
 					// Initialize Phantom Process
-					spawnPhantom(serverPort);
+					spawnPhantom(serverPort, processLogger);
 				},
 
 				// Phantom Connected via socket

@@ -241,7 +241,7 @@ module.exports = (function(){
 
 				//Send it back
 				if( href && href[0] !== "#" ){
-					links.push({ text:link.text(), href: href });
+					links.push({ text:link.text().trim(), href: href });
 				}
 			});
 
