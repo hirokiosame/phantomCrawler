@@ -92,7 +92,7 @@ module.exports = (function(){
 			if( typeof processLogger !== "function" ){ return; }
 			processLogger({
 				type: "stdout",
-				std: data
+				std: data.toString()
 			});	
 		});
 
@@ -100,7 +100,7 @@ module.exports = (function(){
 			if( typeof processLogger !== "function" ){ return; }
 			processLogger({
 				type: "stderr",
-				std: data
+				std: data.toString()
 			});	
 		});
 
