@@ -3,15 +3,15 @@ module.exports = (function(){
 	// Scratch paper to store received headers
 	var received = {};
 
-	function inspect(url, log, callback, imagePath){
+	function Crawl(url, log, result, closed, imagePath){
 
 		// Validate callback
-		if( typeof callback !== "function" ){ throw new Error("Callback not a function"); }
-
-		if( typeof log !== "function" ){ return callback(new Error("Logger not a function") ); }
+		if( typeof closed !== "function" ){ throw new Error("Closed callback not a function"); }
+		if( typeof result !== "function" ){ throw new Error("Result callback not a function"); }
+		if( typeof log !== "function" ){ return result(new Error("Logger not a function") ); }
 
 		// Validate URL
-		if( typeof url !== "string" ){ return callback(new Error("URL not a string")); }
+		if( typeof url !== "string" ){ return result(new Error("URL not a string")); }
 
 
 		// Reference to this
@@ -21,11 +21,12 @@ module.exports = (function(){
 		this.log = log;
 
 		// Create callback
+		this.closed = closed;
 		this.callback = function(){
 			self.page.close();
 			delete self.page;
 
-			callback(null, self);
+			result(null, self);
 		};
 
 		// Create window
@@ -84,7 +85,7 @@ module.exports = (function(){
 		});
 	}
 
-	inspect.prototype.configure = function(){
+	Crawl.prototype.configure = function(){
 
 		// Set window size
 		this.page.viewportSize = {
@@ -109,7 +110,7 @@ module.exports = (function(){
 		this.page.clearCookies();
 	};
 
-	inspect.prototype.bindEvents = function(){
+	Crawl.prototype.bindEvents = function(){
 
 		var self = this;
 
@@ -136,9 +137,10 @@ module.exports = (function(){
 		bindEvents(
 			this.page,
 			{
+				// Function : arguments
 				onAlert: ['msg'],
 				onCallback: ['data'],
-				onClosing: ['closingPage'],
+				// onClosing: ['closingPage'],
 				onConfirm: ['msg'],
 				// onConsoleMessage: ['msg', 'lineNum', 'sourceId'],
 				onError: ['msg', 'trace'],
@@ -156,6 +158,15 @@ module.exports = (function(){
 				onUrlChanged: ['targetUrl']
 			}
 		);
+
+		this.page.onClosing = function(closingPage){
+			self.log({
+				"event": "onClosing",
+				"closingPage": closingPage
+			});
+
+			self.closed();
+		};
 
 		this.page.onResourceReceived = function(response){
 
@@ -202,7 +213,7 @@ module.exports = (function(){
 		};
 	};
 
-	inspect.prototype.extractInputs = function(){
+	Crawl.prototype.extractInputs = function(){
 
 		return this.page.evaluate(function(){
 
@@ -226,7 +237,7 @@ module.exports = (function(){
 		});
 	};
 
-	inspect.prototype.extractLinks = function(){
+	Crawl.prototype.extractLinks = function(){
 
 		return this.page.evaluate(function(){
 
@@ -250,7 +261,7 @@ module.exports = (function(){
 		});
 	};
 
-	inspect.prototype.extractForms = function(){
+	Crawl.prototype.extractForms = function(){
 
 		return this.page.evaluate(function(){
 
@@ -289,7 +300,7 @@ module.exports = (function(){
 		});
 	};
 
-	inspect.prototype.evaluate = function(){
+	Crawl.prototype.evaluate = function(){
 
 		// Gather inputs
 		this.extracted = {};
@@ -301,5 +312,5 @@ module.exports = (function(){
 		this.callback();
 	};
 
-	return inspect;
+	return Crawl;
 })()

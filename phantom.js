@@ -5,7 +5,9 @@ module.exports = (function(){
 	var http = require('http'),
 		child_process = require('child_process'),
 		spawn = child_process.spawn,
-		ws = require("ws");
+		ws = require("ws"),
+		events = require("events"),
+		util = require("util");
 
 
 	var server, serverPort;
@@ -37,19 +39,44 @@ module.exports = (function(){
 		// Set up socket
 		new ws.Server({ server: server })
 
+		// Phantom process connected to WS
 		.on('connection', function(socket){
 
-			var logger, callback;
+			// Current phantom request
+			var currentReq = null;
 
 			// Wait for results
 			socket
 			.on('message', function(res){
+
+				// Ignore if no current req...
+				if( currentReq === null ){ return; }
+
 				res = JSON.parse(res);
-				if( res.type === 'log' ){ logger(res); }
+
+				// On completely done
+				if( res.type === 'closed' ){
+
+					var _currentReq = currentReq;
+
+					// Done
+					currentReq = null;
+
+					if( _currentReq.result ){
+						_currentReq.reqCallback(null, _currentReq.result);
+					}else{
+						_currentReq.reqCallback(new Error("PhantomJS page closed without result"));
+					}
+				}
+
+				// If received logging message, send as log
+				else if( res.type === 'log' ){
+					currentReq.emit("log", res);
+				}
+
+				// Otherwise, result
 				else{
-					callback(null, res);
-					// logger = null;
-					// callback = null;
+					currentReq.result = res;
 				}
 			})
 			.on('error', function(){
@@ -59,26 +86,46 @@ module.exports = (function(){
 				console.log("Phantom left", arguments);
 
 				// Callback to signal error
-				callback(new Error("Phantom Crashed"));
+				currentReq.reqCallback(new Error("Phantom disconnected from socket"));
 
 				// Re-initialize
 				initialized();
 			});
 
 
-			// Callback - return API
-			connected(function phantomReq(req, _logger, _callback){
+			// Create API
+			function phantomReq(req, _callback){
+
+				// Enforce new
+				if( !(this instanceof phantomReq) ){ return new phantomReq(req, _callback); }
 
 				// Validation
-				if( typeof _logger !== "function" || typeof _callback !== "function" ){ return; }
+				if( typeof _callback !== "function" ){ throw new Error("Callback not a function"); }
+
+				// Current requested
+				if( currentReq !== null ){
+					_callback(new Error("Currently processing a request; ignoring..."));
+					return this;
+				}
+
+				// Invoke events emitter
+				events.EventEmitter.apply(this);
 
 				// Store callbacks
-				logger = _logger;
-				callback = _callback;
+				this.reqCallback = _callback;
 
-				// Send to Phantom
+				// Make available
+				currentReq = this;
+
+				// Send req to Phantom
 				socket.send(JSON.stringify(req));
-			});
+			}
+
+			util.inherits(phantomReq, events.EventEmitter);
+
+
+			// Callback - return API
+			connected(phantomReq);
 		});
 
 		// Websocket initialized
@@ -89,67 +136,57 @@ module.exports = (function(){
 		var proc = spawn('phantomjs', ['--ssl-protocol=any', __dirname + '/phantomCode.js', serverPort ]);
 
 		proc.stdout.on('data', function (data){
-			if( typeof processLogger !== "function" ){ return; }
-			processLogger({
-				type: "stdout",
-				std: data.toString()
-			});	
+			processLogger.emit("stdout", data.toString());	
 		});
 
 		proc.stderr.on('data', function (data){
-			if( typeof processLogger !== "function" ){ return; }
-			processLogger({
-				type: "stderr",
-				std: data.toString()
-			});	
+			processLogger.emit("stderr", data.toString());
 		});
 
 		proc.on('close', function (code, signal){
-			console.log(process.pid, 'child process exited with code', arguments);
+			processLogger.emit("error", "Phantom process closed with code(" + code + ") and signal(" + signal + ")");
 
-			// // code === 1
-
-			// // If callback is still there, it hasn't been called, thus terminated early
-			// if( typeof callbacks[id] === "function" ){ 
-			// 	return log("Terminated early... retrying again", function(){
-			// 		tryAgain(new Error("Terminated early"));
-			// 	});
-			// }
-
-			// // Success
-			// tryAgain(null, callbacks[id]);
+			// Will be respawned by initWebSocket
 		});
 
-		// // Catches ctrl+c event to exit properly
-		// process.on('SIGINT', process.exit);
+		// Catches ctrl+c event to exit properly
+		process.on('SIGINT', process.exit);
 
-		// // Cleanup before exit
-		// process.on('exit', function(){
+		// Cleanup before exit
+		process.on('exit', function(){
 
-		// 	// Kill MySql connection
-		// 	proc.kill('SIGHUP');
-
-		// 	console.log("Exit!");
-		// });
+			// Kill MySql connection
+			proc.kill('SIGHUP');
+		});
 	}
 
 
-	return function init( processLogger, callback, port ){
+	function init( callback, port ){
+
+		// Enforce new
+		if( !(this instanceof init) ){ return new init(callback, port); }
+
+		// Invoke events emitter
+		events.EventEmitter.apply(this);
+
+		var self = this;
 
 		port = port || 0;
 
 		// Initialize HTTP Server
 		initHTTPServer(port, function(err, server, serverPort){
 
-			// console.log("HTTP Server ready", serverPort);
+			self.emit("log", "HTTP server listening to " + serverPort);
 
 			// Initialize websocket
 			initWebSocket(
 				server,
 				function initialized(){
 
+					self.emit("log", "Web socket server listening to " + serverPort);
+
 					// Initialize Phantom Process
-					spawnPhantom(serverPort, processLogger);
+					spawnPhantom(serverPort, self);
 				},
 
 				// Phantom Connected via socket
@@ -157,4 +194,8 @@ module.exports = (function(){
 			);
 		});
 	};
+
+	util.inherits(init, events.EventEmitter);
+
+	return init;
 })();

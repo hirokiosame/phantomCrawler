@@ -5,6 +5,8 @@ module.exports = function(serverPort){
 		// Wait for request...
 		page.onCallback = function(request){
 
+			console.log("Received crawl request", request);
+
 			// Parse request
 			request = JSON.parse(request);
 
@@ -22,22 +24,37 @@ module.exports = function(serverPort){
 						message: msg
 					}));
 				},
-				function done(err, crawled){
-					if( err ){ return console.log("Error", err); }
+				function result(err, crawled){
+					if( err ){
+						return console.log("Error", err);
+					}
 
 					// Add result
 					request.data = crawled;
 
+					// Return result
 					page.evaluate(function(result){
 						ws.send(result);
 					}, JSON.stringify(request));
+				},
+				function done(){
+
+					// Return result
+					page.evaluate(function(result){
+						ws.send(result);
+					}, JSON.stringify({
+						type: "closed"
+					}));	
 				}
 			);
 		};
 
-
-	page.open("http://127.0.0.1:"+serverPort+"/", function(status){
-		console.log("Opened!", status);
+	// Connect to HTTP server
+	page.open("http://127.0.0.1:" + serverPort, function(status){
+		if( status !== "success" ){
+			 throw new Error('Failed to connect to the HTTP API Server');
+			phantom.exit(1);
+		}
+		console.log("Connected to HTTP API server");
 	});
-
 };
