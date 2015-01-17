@@ -1,12 +1,11 @@
 var initPhantom = require("./phantom.js");
 
 
-initPhantom(function(phantomReq){
+(function makeReq(){
+	initPhantom(function(phantom){
 
-	// To repeat
-	(function makeReq(){
-			
-		phantomReq(
+		// To repeat	
+		phantom.req(
 			{
 				id: 1,
 				url: "http://google.com",
@@ -22,18 +21,18 @@ initPhantom(function(phantomReq){
 		.on("log", function(){
 			// console.log("Log message", arguments);
 		});
-	})();
+	})
+	.on("stdout", function(){
+		console.log("stdout", arguments);
+	})
+	.on("stderr", function(){
+		console.log("stderr", arguments);
+	})
+	.on("log", function(){
+		console.log("log", arguments);
+	})
+	.on("error", function(){
+		console.log("error", arguments);
+	});
 
-})
-.on("stdout", function(){
-	console.log("stdout", arguments);
-})
-.on("stderr", function(){
-	console.log("stderr", arguments);
-})
-.on("log", function(){
-	console.log("log", arguments);
-})
-.on("error", function(){
-	console.log("error", arguments);
-});
+})();

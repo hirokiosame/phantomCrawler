@@ -7,15 +7,18 @@ module.exports = (function(){
 		spawn = child_process.spawn,
 		ws = require("ws"),
 		events = require("events"),
-		util = require("util");
+		util = require("util"),
+		API = require("./API");
 
 
-	var server, serverPort;
+	var server, serverPort,
+		wsServer,
+		phantomAPI;
 	
 	function initHTTPServer( port, callback ){
 
 		// If server is already running
-		if( server ){ return callback(null, server, serverPort); }
+		if( server !== undefined ){ return callback(null, server, serverPort); }
 
 		server = http.createServer(function (req, res){
 			res.writeHead(200, { "Content-Type": "text/html" });
@@ -34,98 +37,49 @@ module.exports = (function(){
 		});
 	}
 
+
 	function initWebSocket(server, initialized, connected){
 
+		// Already Established
+		if( wsServer !== undefined ){
+			// Already Connected
+			if( phantomAPI !== undefined ){ return connected(phantomAPI); }
+			return initialized();
+		}
+
 		// Set up socket
-		new ws.Server({ server: server })
+		wsServer = new ws.Server({ server: server })
 
 		// Phantom process connected to WS
 		.on('connection', function(socket){
-
-			// Current phantom request
-			var currentReq = null;
 
 			// Wait for results
 			socket
 			.on('message', function(res){
 
-				// Ignore if no current req...
-				if( currentReq === null ){ return; }
-
-				res = JSON.parse(res);
-
-				// On completely done
-				if( res.type === 'closed' ){
-
-					var _currentReq = currentReq;
-
-					// Done
-					currentReq = null;
-
-					if( _currentReq.result ){
-						_currentReq.reqCallback(null, _currentReq.result);
-					}else{
-						_currentReq.reqCallback(new Error("PhantomJS page closed without result"));
-					}
-				}
-
-				// If received logging message, send as log
-				else if( res.type === 'log' ){
-					currentReq.emit("log", res);
-				}
-
-				// Otherwise, result
-				else{
-					currentReq.result = res;
-				}
+				// Forward response
+				phantomAPI.res(res);
 			})
 			.on('error', function(){
 				console.log('Socket error', arguments);
 			})
 			.on('close', function(code, message){
-				console.log("Phantom left", arguments);
+				console.log("Phantom left ws", arguments);
+
+				var _currentReq = currentReq;
+
+				// Done
+				currentReq = null;
 
 				// Callback to signal error
-				currentReq.reqCallback(new Error("Phantom disconnected from socket"));
+				_currentReq.reqCallback(new Error("Phantom disconnected from socket"));
 
 				// Re-initialize
 				initialized();
 			});
 
-
-			// Create API
-			function phantomReq(req, _callback){
-
-				// Enforce new
-				if( !(this instanceof phantomReq) ){ return new phantomReq(req, _callback); }
-
-				// Validation
-				if( typeof _callback !== "function" ){ throw new Error("Callback not a function"); }
-
-				// Current requested
-				if( currentReq !== null ){
-					_callback(new Error("Currently processing a request; ignoring..."));
-					return this;
-				}
-
-				// Invoke events emitter
-				events.EventEmitter.apply(this);
-
-				// Store callbacks
-				this.reqCallback = _callback;
-
-				// Make available
-				currentReq = this;
-
-				// Send req to Phantom
-				socket.send(JSON.stringify(req));
-			}
-
-			util.inherits(phantomReq, events.EventEmitter);
-
-
 			// Callback - return API
-			connected(phantomReq);
+			connected(phantomAPI = new API(socket));
 		});
 
 		// Websocket initialized
@@ -133,7 +87,7 @@ module.exports = (function(){
 	}
 
 	function spawnPhantom(serverPort, processLogger){
-		var proc = spawn('phantomjs', ['--ssl-protocol=any', __dirname + '/phantomCode.js', serverPort ]);
+		var proc = spawn('phantomjs', ['--ssl-protocol=any', __dirname + '/phantomCode/index.js', serverPort ]);
 
 		proc.stdout.on('data', function (data){
 			processLogger.emit("stdout", data.toString());	
@@ -175,6 +129,8 @@ module.exports = (function(){
 
 		// Initialize HTTP Server
 		initHTTPServer(port, function(err, server, serverPort){
+
+			if( err ){ return callback(err); }
 
 			self.emit("log", "HTTP server listening to " + serverPort);
 
