@@ -8,12 +8,12 @@ module.exports = function(serverPort){
 			console.log("Received crawl request", request);
 
 			// Parse request
-			request = JSON.parse(request);
+			var _request = JSON.parse(request);
 
 			// Make request
 			var startTime = new Date();
 			new Crawl(
-				request.url,
+				_request.url,
 				function log(msg){
 
 					page.evaluate(function(msg){
@@ -30,17 +30,17 @@ module.exports = function(serverPort){
 					}
 
 					// Add result
-					request.data = crawled;
+					_request.data = crawled;
 
 					// Return result
 					page.evaluate(function(result){
 						ws.send(result);
-					}, JSON.stringify(request));
+					}, JSON.stringify(_request));
 				},
 				function done(){
 
 					console.log("Done crawling", request);
-					
+
 					// Return result
 					page.evaluate(function(result){
 						ws.send(result);
