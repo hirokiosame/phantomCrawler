@@ -11,7 +11,14 @@ module.exports = (function(){
 
 		this.callback = null;
 
-		this.socket = socket;
+		this.closed = false;
+
+		var self;
+		this.socket = socket
+
+		.on('close', function(code, message){
+			self.closed = true;
+		});
 /*
 		// Enforce new
 		if( !(this instanceof phantomAPI) ){ return (phantomAPI = new phantomAPI(req, _callback)); }
@@ -39,6 +46,8 @@ module.exports = (function(){
 		// Validation
 		if( typeof callback !== "function" ){ throw new Error("Request callback is not a function"); }
 		if( typeof req !== "object" || req === null ){ return callback(new Error("Request object is invalid")); }
+
+		if( this.closed === true ){ return callback(new Error("Socket is closed")); }
 
 		// Check if request is in progress
 		if( this.callback !== null ){
