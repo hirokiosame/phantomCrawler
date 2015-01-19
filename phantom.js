@@ -74,13 +74,17 @@ module.exports = (function(){
 					type: 'closed'
 				});
 
+				phantomAPI = undefined;
+
 				// Re-initialize
-				initialized();
+				// initialized();
 			});
 
 			// Callback - return API
 			connected(phantomAPI = new API(socket));
 		});
+
+		self.emit("log", "Web socket server listening to " + server.address().port);
 
 		// Websocket initialized
 		initialized();
@@ -142,13 +146,8 @@ module.exports = (function(){
 				server,
 				function initialized(callback){
 
-					self.emit("log", "Web socket server listening to " + serverPort);
-
 					// Initialize Phantom Process
 					spawnPhantom(serverPort, self);
-					if( typeof callback === "function" ){
-						callback();
-					}
 				},
 
 				// Phantom Connected via socket
