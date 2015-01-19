@@ -78,7 +78,6 @@ module.exports = (function(){
 			}else{
 				callback(new Error("PhantomJS page closed without result"));
 			}
-
 		}
 
 		// If received logging message, send as log

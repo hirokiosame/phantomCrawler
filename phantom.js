@@ -66,13 +66,10 @@ module.exports = (function(){
 			.on('close', function(code, message){
 				console.log("Phantom left ws", arguments);
 
-				var _currentReq = currentReq;
-
-				// Done
-				currentReq = null;
-
-				// Callback to signal error
-				_currentReq.reqCallback(new Error("Phantom disconnected from socket"));
+				// Indicate close
+				phantomAPI.res({
+					type: 'closed'
+				});
 
 				// Re-initialize
 				initialized();
