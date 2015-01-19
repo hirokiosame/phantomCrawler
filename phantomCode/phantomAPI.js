@@ -39,6 +39,8 @@ module.exports = function(serverPort){
 				},
 				function done(){
 
+					console.log("Done crawling", request);
+					
 					// Return result
 					page.evaluate(function(result){
 						ws.send(result);
