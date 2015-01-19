@@ -38,7 +38,7 @@ module.exports = (function(){
 	}
 
 
-	function initWebSocket(server, initialized, connected){
+	function initWebSocket(processLogger, server, initialized, connected){
 
 		// Already Established
 		if( wsServer !== undefined ){
@@ -52,6 +52,8 @@ module.exports = (function(){
 
 		// Phantom process connected to WS
 		.on('connection', function(socket){
+
+			processLogger.emit("log", "Phantom connected to WS");
 
 			// Wait for results
 			socket
@@ -96,10 +98,12 @@ module.exports = (function(){
 		});
 
 		proc.on('close', function (code, signal){
-			processLogger.emit("error", "Phantom process closed with code(" + code + ") and signal(" + signal + ")");
+			processLogger.emit("error", "PhantomJS process(" + proc.pid + ") closed with code(" + code + ") and signal(" + signal + ")");
 
 			// Will be respawned by initWebSocket
 		});
+
+		processLogger.emit("log", "PhantomJS process(" + proc.pid + ") running");
 
 		// Catches ctrl+c event to exit properly
 		process.on('SIGINT', process.exit);
@@ -134,6 +138,7 @@ module.exports = (function(){
 
 			// Initialize websocket
 			initWebSocket(
+				self,
 				server,
 				function initialized(callback){
 
