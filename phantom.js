@@ -66,13 +66,14 @@ module.exports = (function(){
 			.on('close', function(code, message){
 				console.log("Phantom left ws", arguments);
 
-				// Indicate close
-				phantomAPI.res({
-					type: 'closed'
-				});
-
 				// Re-initialize
-				initialized();
+				initialized(function(){
+
+					// Indicate close
+					phantomAPI.res({
+						type: 'closed'
+					});
+				});
 			});
 
 			// Callback - return API
@@ -134,12 +135,15 @@ module.exports = (function(){
 			// Initialize websocket
 			initWebSocket(
 				server,
-				function initialized(){
+				function initialized(callback){
 
 					self.emit("log", "Web socket server listening to " + serverPort);
 
 					// Initialize Phantom Process
 					spawnPhantom(serverPort, self);
+					if( typeof callback === "function" ){
+						callback();
+					}
 				},
 
 				// Phantom Connected via socket
