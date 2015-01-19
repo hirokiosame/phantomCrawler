@@ -66,16 +66,16 @@ module.exports = (function(){
 				console.log('Socket error', arguments);
 			})
 			.on('close', function(code, message){
-				console.log("Phantom left ws", arguments);
+
+				processLogger.emit("error", "Phantom left WS");
+
+				// Indicate close
+				phantomAPI.res({
+					type: 'closed'
+				});
 
 				// Re-initialize
-				initialized(function(){
-
-					// Indicate close
-					phantomAPI.res({
-						type: 'closed'
-					});
-				});
+				initialized();
 			});
 
 			// Callback - return API
@@ -103,7 +103,7 @@ module.exports = (function(){
 			// Will be respawned by initWebSocket
 		});
 
-		processLogger.emit("log", "PhantomJS process(" + proc.pid + ") running");
+		processLogger.emit("log", "PhantomJS process(" + proc.pid + ") spawned");
 
 		// Catches ctrl+c event to exit properly
 		process.on('SIGINT', process.exit);
