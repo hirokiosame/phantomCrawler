@@ -58,7 +58,7 @@ module.exports = (function(){
 			.on('message', function(res){
 
 				// Forward response
-				phantomAPI.res(res);
+				phantomAPI.res(JSON.parse(res));
 			})
 			.on('error', function(){
 				console.log('Socket error', arguments);

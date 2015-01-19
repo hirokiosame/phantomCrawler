@@ -59,9 +59,6 @@ module.exports = (function(){
 		// Ignore if no current req...
 		if( this.callback === null ){ return; }
 
-
-		res = JSON.parse(res);
-
 		// On completely done
 		if( res.type === 'closed' ){
 
