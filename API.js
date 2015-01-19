@@ -13,7 +13,8 @@ module.exports = (function(){
 
 		this.closed = false;
 
-		var self;
+		var self = this;
+		
 		this.socket = socket
 
 		.on('close', function(code, message){
