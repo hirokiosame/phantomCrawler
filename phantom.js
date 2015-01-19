@@ -84,7 +84,7 @@ module.exports = (function(){
 			connected(phantomAPI = new API(socket));
 		});
 
-		self.emit("log", "Web socket server listening to " + server.address().port);
+		processLogger.emit("log", "Web socket server listening to " + server.address().port);
 
 		// Websocket initialized
 		initialized();
