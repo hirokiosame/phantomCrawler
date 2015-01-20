@@ -16,8 +16,9 @@ var initPhantom = require("./phantom.js");
 				timeout: 1000
 			},
 			function(err, result){
-				if( err ){ return console.log(err); }
-				console.log("Got result!", result);
+				if( err ){ console.log("Got Error", err); }
+				else{ console.log("Got result!", result); }
+				
 				makeReq();
 			}
 		)

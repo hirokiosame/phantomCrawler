@@ -41,42 +41,47 @@ module.exports = (function(){
 		socket.send(JSON.stringify(currentRequest.req));
 	}
 
+	function returnData(){
+
+		// Done
+		var _currentRequest = currentRequest;
+		currentRequest = null;
+
+		// Remove log listeners
+		EE.removeAllListeners("log");
+
+		// Check if there is a result
+		if( receivedResult ){
+
+			// Send back
+			_currentRequest.callback(null, receivedResult);
+
+			// Remove received data
+			receivedResult = null;
+		}else{
+
+			// Sendback error
+			_currentRequest.callback(new Error("PhantomJS page didn't return a result"));
+		}	
+	}
+
 	function handleResponse(res){
 
 		// Ignore if no current req...
 		if( currentRequest === null ){ return; }
 
 		// On completely done
-
-		// if( res.type === 'connected' ){
-		// 	console.log("Connected", res);
-		// }else 
 		if( res.type === 'closed' ){
-
-			// Done
-			var _currentRequest = currentRequest;
-			currentRequest = null;
-
-			// Remove log listeners
-			EE.removeAllListeners("log");
-
-			if( receivedResult ){
-				_currentRequest.callback(null, receivedResult);
-				receivedResult = null;
-			}else{
-				// _currentRequest.callback(new Error("PhantomJS page closed without result"));
-			}
+			return returnData();
 		}
 
 		// If received logging message, send as log
-		else if( res.type === 'log' ){
-			EE.emit("log", res);
+		if( res.type === 'log' ){
+			return EE.emit("log", res);
 		}
 
 		// Otherwise, result
-		else{
-			receivedResult = res;
-		}
+		receivedResult = res;
 	}
 
 
@@ -98,6 +103,9 @@ module.exports = (function(){
 
 				// Remove reference
 				socket = null;
+
+				// Return data
+				returnData();
 			}
 		};
 	};
