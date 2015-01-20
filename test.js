@@ -7,7 +7,8 @@ var initPhantom = require("./phantom.js");
 	initPhantom(function(phantom){
 
 		// To repeat
-		phantom.req(
+		phantom
+		.req(
 			{
 				id: 1,
 				url: "http://google.com",
@@ -36,4 +37,4 @@ var initPhantom = require("./phantom.js");
 	.on("error", function(){
 		console.log("error", arguments);
 	});
-})()
+})();

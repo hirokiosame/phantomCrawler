@@ -8,6 +8,8 @@ module.exports = (function(){
 	// Cleanup before exit
 	process.on('exit', function(){
 
+		if( phantomProcess === null ){ return; }
+
 		// Kill MySql connection
 		phantomProcess.kill('SIGHUP');
 	});
