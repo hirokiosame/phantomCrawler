@@ -19,13 +19,16 @@ module.exports = function(serverPort){
 			// 	"id": system.pid
 			// });
 
+
 			// Parse request
 			var _request = JSON.parse(request);
+			
 
 			// Make request
 			var startTime = new Date();
 			new Crawl(
 				_request.url,
+				( typeof _request.timeout === "number" ) && _request.timeout || 0,
 				function log(msg){
 
 					socketSend({
@@ -36,11 +39,12 @@ module.exports = function(serverPort){
 				},
 				function result(err, crawled){
 					if( err ){
-						return console.log("Error", err);
+						// Add error
+						_request.error = err;
+					}else{
+						// Add result
+						_request.data = crawled;	
 					}
-
-					// Add result
-					_request.data = crawled;
 
 					// Return result
 					socketSend(_request);

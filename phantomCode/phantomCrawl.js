@@ -3,7 +3,7 @@ module.exports = (function(){
 	// Scratch paper to store received headers
 	var received = {};
 
-	function Crawl(url, log, result, closed, imagePath){
+	function Crawl(url, timeout, log, result, closed, imagePath){
 
 		// Validate callback
 		if( typeof closed !== "function" ){ throw new Error("Closed callback not a function"); }
@@ -22,11 +22,15 @@ module.exports = (function(){
 
 		// Create callback
 		this.closed = closed;
-		this.callback = function(){
+		this.callback = function(err){
 			self.page.close();
 			delete self.page;
 
-			result(null, self);
+			if( err ){
+				result(err);
+			}else{
+				result(null, self);
+			}
 		};
 
 		// Create window
@@ -35,6 +39,14 @@ module.exports = (function(){
 		this.configure();
 
 		this.bindEvents();
+
+
+		// Timeout
+		if( timeout > 0 ){
+			setTimeout(function(){
+				self.callback(new Error("Timeout"));
+			}, timeout);	
+		}
 
 		this.page.open(url, function(status){
 
