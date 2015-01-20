@@ -13,7 +13,7 @@ var initPhantom = require("./phantom.js");
 				id: 1,
 				url: "http://google.com", //"http://163.com", //"https://espn.go.com",
 				imagePath: "",
-				timeout: 10000
+				timeout: 1000
 			},
 			function(err, result){
 				if( err ){ console.log("Got Error", err); }
