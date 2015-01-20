@@ -3,7 +3,8 @@ module.exports = (function(){
 	var http = require('http'),
 		ws = require("ws");
 
-	var HTTPServer, HTTPServerPort, HTTPServerPayload, WSServer;
+	var HTTPServer, HTTPServerPort, HTTPServerPayload,
+		WSServer, currentSocket = null;
 	
 	function initHTTPServer( EE, callback, port ){
 
@@ -40,24 +41,53 @@ module.exports = (function(){
 		});
 	}
 
-	function initWebSocket(EE, server, callback){
+	function initWebSocket(EE, server, initialized, API){
 
-		if( WSServer === undefined ){
+		// If already defined, send
+		if( WSServer !== undefined ){
 
-			// Create Server
-			WSServer = new ws.Server({ server: server });
-
-			// Log
-			EE.emit("log", "Web Socket Server bound to HTTP server");
+			// Indicate initialized
+			return initialized(null, HTTPServerPort);
 		}
 
-		return callback(null, WSServer, HTTPServerPort);
+
+		// Create Server
+		WSServer = new ws.Server({ server: server })
+
+		.on('connection', function(clientSocket){
+
+			// Save socket
+			clientSocket
+
+			.on('message', function(res){
+
+				// Forward response
+				API.handleResponse(JSON.parse(res));
+			})
+			.on('error', function(err){
+				EE.emit("error", err);
+			})
+			.on('close', function(code, message){
+
+				EE.emit("error", "Phantom left WS");
+				API.disconnected();
+			});
+
+			EE.emit("error", "Phantom connected to WS");
+
+			API.connected(clientSocket);
+		});
+
+		// Log
+		EE.emit("log", "Web Socket Server bound to HTTP server");
+
+		initialized(null, HTTPServerPort);
 	}
 
-	return function init(EE, callback, port){
+	return function init(EE, initialized, API, port){
 		initHTTPServer(EE, function(err, server, port){
 
-			initWebSocket(EE, server, callback);
+			initWebSocket(EE, server, initialized, API);
 		}, port);
 
 		return EE;

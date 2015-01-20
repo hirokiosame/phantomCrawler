@@ -5,7 +5,6 @@ var initPhantom = require("./phantom.js");
 
 	// Sets up servers and spawns process
 	initPhantom(function(phantom){
-		
 
 		// To repeat
 		phantom.req(
@@ -24,7 +23,6 @@ var initPhantom = require("./phantom.js");
 		.on("log", function(){
 			// console.log("Log message", arguments);
 		});
-
 	})
 	.on("stdout", function(){
 		console.log("stdout", arguments);

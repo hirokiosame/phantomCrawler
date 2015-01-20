@@ -12,7 +12,7 @@ module.exports = (function(){
 		phantomProcess.kill('SIGHUP');
 	});
 
-	return function(EE, serverPort){
+	return function respawn(EE, serverPort){
 
 		// Already running
 		if( phantomProcess ){ return true; }
@@ -21,11 +21,11 @@ module.exports = (function(){
 		phantomProcess = spawn('phantomjs', ['--ssl-protocol=any', __dirname + '/phantomCode/index.js', serverPort ]);
 
 		phantomProcess.stdout.on('data', function (data){
-			EE.emit("stdout", data.toString());	
+			EE.emit("stdout", phantomProcess.pid, data.toString());	
 		});
 
 		phantomProcess.stderr.on('data', function (data){
-			EE.emit("stderr", data.toString());
+			EE.emit("stderr", phantomProcess.pid, data.toString());
 		});
 
 		phantomProcess.on('close', function (code, signal){
@@ -33,6 +33,9 @@ module.exports = (function(){
 
 			// Remove
 			phantomProcess = null;
+
+			// Respawn
+			respawn(EE, serverPort);
 		});
 
 		EE.emit("log", "PhantomJS process(" + phantomProcess.pid + ") spawned");

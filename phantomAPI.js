@@ -47,6 +47,10 @@ module.exports = (function(){
 		if( currentRequest === null ){ return; }
 
 		// On completely done
+
+		// if( res.type === 'connected' ){
+		// 	console.log("Connected", res);
+		// }else 
 		if( res.type === 'closed' ){
 
 			// Done
@@ -60,7 +64,7 @@ module.exports = (function(){
 				_currentRequest.callback(null, receivedResult);
 				receivedResult = null;
 			}else{
-				_currentRequest.callback(new Error("PhantomJS page closed without result"));
+				// _currentRequest.callback(new Error("PhantomJS page closed without result"));
 			}
 		}
 
@@ -92,6 +96,7 @@ module.exports = (function(){
 			},
 			disconnected: function(){
 
+				// Remove reference
 				socket = null;
 			}
 		};

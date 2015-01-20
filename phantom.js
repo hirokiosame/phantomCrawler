@@ -5,7 +5,8 @@ module.exports = (function(){
 	var
 		events = require("events"),
 		initServer = require("./initServer"),
-		phantomAPI = require("./phantomAPI");
+		phantomAPI = require("./phantomAPI"),
+		spawnPhantom = require("./spawnPhantom");
 
 
 	// Make EE
@@ -21,49 +22,25 @@ module.exports = (function(){
 
 	function init(callback, port){
 
+		// Reset EE
 		EE.removeAllListeners();
 
+		// Create Phantom API
+		var API = phantomAPI(callback);
+
 		// Initialize server
-		initServer(EE, function(err, socket, port){
+		initServer(
+			EE,
+			function serverInitialized(err, port){
 
-			if( err ){ return callback(err); }
+				if( err ){ return callback(err); }
 
-			// Create Phantom API
-			var API = phantomAPI(callback);
-
-			// Phantom process connected to WS
-			socket.on('connection', function(socket){
-
-				EE.emit("log", "Phantom connected to WS");
-
-				// Send queued request
-				API.connected(socket);
-
-				// Wait for results
-				socket
-				.on('message', function(res){
-
-					// Forward response
-					API.handleResponse(JSON.parse(res));
-				})
-				.on('error', function(err){
-					EE.emit("error", err);
-				})
-				.on('close', function(code, message){
-
-					EE.emit("error", "Phantom left WS");
-
-					// Indicate close
-					handleRes({
-						type: 'closed'
-					});
-				});
-			});
-
-			// Spawn Phantom
-			require("./spawnPhantom")(EE, port);
-	
-		}, port);
+				// Spawn Phantom
+				spawnPhantom(EE, port);
+			},
+			API,
+			port
+		);
 
 		return EE;
 	}

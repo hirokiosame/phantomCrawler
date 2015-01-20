@@ -2,10 +2,22 @@ module.exports = function(serverPort){
 
 	var page = browser.create();
 
+		function socketSend(data){
+			page.evaluate(function(msg){
+				ws.send(msg);
+			}, JSON.stringify(data));
+		}
+
+
 		// Wait for request...
 		page.onCallback = function(request){
 
 			console.log("Received crawl request", request);
+			
+			// socketSend({
+			// 	"type": "connected",
+			// 	"id": system.pid
+			// });
 
 			// Parse request
 			var _request = JSON.parse(request);
@@ -16,13 +28,11 @@ module.exports = function(serverPort){
 				_request.url,
 				function log(msg){
 
-					page.evaluate(function(msg){
-						ws.send(msg);
-					}, JSON.stringify({
+					socketSend({
 						type: "log",
 						time: new Date() - startTime,
 						message: msg
-					}));
+					});
 				},
 				function result(err, crawled){
 					if( err ){
@@ -33,20 +43,16 @@ module.exports = function(serverPort){
 					_request.data = crawled;
 
 					// Return result
-					page.evaluate(function(result){
-						ws.send(result);
-					}, JSON.stringify(_request));
+					socketSend(_request);
 				},
 				function done(){
 
 					console.log("Done crawling", request);
 
 					// Return result
-					page.evaluate(function(result){
-						ws.send(result);
-					}, JSON.stringify({
+					socketSend({
 						type: "closed"
-					}));	
+					});	
 				}
 			);
 		};
