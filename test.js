@@ -2,9 +2,12 @@ var initPhantom = require("./phantom.js");
 
 
 (function makeReq(){
-	initPhantom(function(phantom){
 
-		// To repeat	
+	// Sets up servers and spawns process
+	initPhantom(function(phantom){
+		
+
+		// To repeat
 		phantom.req(
 			{
 				id: 1,
@@ -21,6 +24,7 @@ var initPhantom = require("./phantom.js");
 		.on("log", function(){
 			// console.log("Log message", arguments);
 		});
+
 	})
 	.on("stdout", function(){
 		console.log("stdout", arguments);
@@ -34,5 +38,4 @@ var initPhantom = require("./phantom.js");
 	.on("error", function(){
 		console.log("error", arguments);
 	});
-
-})();
+})()
