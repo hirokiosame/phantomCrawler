@@ -17,19 +17,33 @@ module.exports = (function(){
 		// Reference to this
 		var self = this;
 
+		// Return object
+		this.collected = {};
+
 		// Reference logger
 		this.log = log;
 
 		// Create callback
 		this.closed = closed;
+
+
 		this.callback = function(err){
+
+			// If already triggered, ignore
+			if( self.callback.triggered ){
+				return;
+			}
+
+			// Mark as triggered
+			self.callback.triggered = 1;
+
+			// Close page
 			self.page.close();
-			delete self.page;
 
 			if( err ){
 				result(err);
 			}else{
-				result(null, self);
+				result(null, self.collected);
 			}
 		};
 
@@ -59,22 +73,20 @@ module.exports = (function(){
 			}
 
 			// Save Headers
-			self.url = decodeURIComponent(self.page.url).split("#")[0];
+			self.collected.url = decodeURIComponent(self.page.url).split("#")[0];
 
-			if( !received.hasOwnProperty(self.url) ){
+			if( !received.hasOwnProperty(self.collected.url) ){
 				log({
 					"event": "URL not found in header",
-					"currentURL": self.url,
+					"currentURL": self.collected.url,
 					"receivedURLs": Object.keys(received)
 				});
 			}else{
-				self.headers = received[self.url].headers;
-				self.status = received[self.url].status;
+				self.collected.headers = received[self.collected.url].headers;
+				self.collected.status = received[self.collected.url].status;
 			}
 
 			window.setTimeout(function(){
-
-				if( self.page === undefined ){ return; }
 
 				// Render page
 				if( typeof imagePath === "string" && imagePath.length > 0 ){
@@ -198,7 +210,7 @@ module.exports = (function(){
 			}
 		};
 
-		this.consoleLogs = [];
+		this.collected.consoleLogs = [];
 		this.page.onConsoleMessage = function(msg, lineNum, sourceId){
 
 			self.log({
@@ -208,14 +220,14 @@ module.exports = (function(){
 				"sourceId": sourceId
 			});
 
-			self.consoleLogs.push({
+			self.collected.consoleLogs.push({
 				message: msg,
 				lineNum: lineNum,
 				sourceId: sourceId
 			});
 		};
 
-		this.resourceError = [];
+		this.collected.resourceError = [];
 		this.page.onResourceError = function(resourceError){
 
 			self.log({
@@ -223,7 +235,7 @@ module.exports = (function(){
 				"resourceError": resourceError
 			});
 			
-			self.resourceError.push(resourceError);
+			self.collected.resourceError.push(resourceError);
 		};
 	};
 
@@ -317,10 +329,10 @@ module.exports = (function(){
 	Crawl.prototype.evaluate = function(){
 
 		// Gather inputs
-		this.extracted = {};
-		this.extracted.inputs = this.extractInputs();
-		this.extracted.links = this.extractLinks();
-		this.extracted.forms = this.extractForms();
+		this.collected.extracted = {};
+		this.collected.extracted.inputs = this.extractInputs();
+		this.collected.extracted.links = this.extractLinks();
+		this.collected.extracted.forms = this.extractForms();
 
 		// Callback
 		this.callback();
