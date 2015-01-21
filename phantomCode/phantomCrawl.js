@@ -44,8 +44,8 @@ module.exports = (function(){
 		// Timeout
 		if( timeout > 0 ){
 			setTimeout(function(){
-				self.callback(new Error("Timeout"));
-			}, timeout);	
+				self.callback("Timeout");
+			}, timeout);
 		}
 
 		this.page.open(url, function(status){
@@ -55,7 +55,7 @@ module.exports = (function(){
 				log({
 					"event": "Failed to open"
 				});
-				return self.callback();
+				return self.callback("Failed to open");
 			}
 
 			// Save Headers
@@ -73,6 +73,8 @@ module.exports = (function(){
 			}
 
 			window.setTimeout(function(){
+
+				if( self.page === undefined ){ return; }
 
 				// Render page
 				if( typeof imagePath === "string" && imagePath.length > 0 ){

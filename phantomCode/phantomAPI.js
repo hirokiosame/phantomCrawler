@@ -38,13 +38,12 @@ module.exports = function(serverPort){
 					});
 				},
 				function result(err, crawled){
-					if( err ){
-						// Add error
-						_request.error = err;
-					}else{
-						// Add result
-						_request.data = crawled;	
-					}
+
+					// Add error
+					if( err ){ _request.error = err; }
+
+					// Add result
+					else{ _request.data = crawled; }
 
 					// Return result
 					socketSend(_request);
