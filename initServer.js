@@ -17,6 +17,7 @@ module.exports = (function(){
 		if( HTTPServer !== undefined ){ return callback(null, HTTPServer, HTTPServerPort); }
 
 		port = port || randomPort();
+		console.log("Port", port);
 
 		// Create Server
 		HTTPServer = http.createServer(function (req, res){
