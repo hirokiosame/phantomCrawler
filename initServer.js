@@ -6,12 +6,17 @@ module.exports = (function(){
 	var HTTPServer, HTTPServerPort, HTTPServerPayload,
 		WSServer, currentSocket = null;
 	
-	function initHTTPServer( EE, callback, port ){
 
-		port = port || 0;
+	function randomPort(){
+		return 1025 + Math.random()*(65535+1);
+	}
+
+	function initHTTPServer( EE, callback, port ){
 
 		// If server is already running
 		if( HTTPServer !== undefined ){ return callback(null, HTTPServer, HTTPServerPort); }
+
+		port = port || randomPort();
 
 		// Create Server
 		HTTPServer = http.createServer(function (req, res){
@@ -22,6 +27,13 @@ module.exports = (function(){
 		})
 
 		.on("error", function(err){
+
+			// If overlap, retry until not in use
+			if( err.code === 'EADDRINUSE' ){
+				HTTPServer = undefined;
+				initHTTPServer(EE, callback);
+				return;
+			}
 			callback(err);
 		})
 
@@ -91,7 +103,7 @@ module.exports = (function(){
 		initHTTPServer(EE, function(err, server, port){
 
 			if( err ){ throw new Error(err); }
-			
+
 			initWebSocket(EE, server, initialized, API);
 		}, port);
 
