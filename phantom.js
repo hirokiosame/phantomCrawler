@@ -12,18 +12,15 @@ module.exports = (function(){
 	// Make EE
 	var EE = new events.EventEmitter();
 
-	EE.setMaxListeners(1);
-
 
 	// Catches ctrl+c event to exit properly
 	// process.on('SIGINT', process.exit);
 
 
-
 	function init(callback, port){
 
 		// Reset EE
-		EE.removeAllListeners();
+		// EE.removeAllListeners();
 
 		// Create Phantom API
 		var API = phantomAPI(callback);

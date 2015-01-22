@@ -9,20 +9,21 @@ module.exports = function(serverPort){
 		}
 
 
+		var _request = null;
+
 		// Wait for request...
 		page.onCallback = function(request){
 
-			console.log("Received crawl request", request);
-			
-			// socketSend({
-			// 	"type": "connected",
-			// 	"id": system.pid
-			// });
+			// If request active
+			if( _request !== null ){ return socketSend({
+				type: "error",
+				message: "Request in session"
+			}); }
 
+			console.log("Received crawl request", request);
 
 			// Parse request
-			var _request = JSON.parse(request);
-			
+			_request = JSON.parse(request);
 
 			// Make request
 			var startTime = new Date();
@@ -51,6 +52,8 @@ module.exports = function(serverPort){
 				function done(){
 
 					console.log("Done crawling", request);
+
+					_request = null;
 
 					// Return result
 					socketSend({

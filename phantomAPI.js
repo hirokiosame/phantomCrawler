@@ -7,16 +7,25 @@ module.exports = (function(){
 		currentRequest = null,
 		receivedResult = null;
 
-
 	// Make EE
-	var EE = new events.EventEmitter();
+	var EE = new events.EventEmitter(),
+		falseEE = { on: function(){} };
 
-	EE.setMaxListeners(1);
+	// EE.setMaxListeners(1);
 	EE.req = function handleRequest(req, callback){
 
 		// Validation
 		if( typeof callback !== "function" ){ throw new Error("Request callback is not a function"); }
-		if( typeof req !== "object" || req === null ){ return callback(new Error("Request object is invalid")); }
+
+		if( typeof req !== "object" || req === null ){
+			callback(new Error("Request object is invalid"));
+			return falseEE;
+		}
+
+		if( currentRequest !== null ){
+			callback(new Error("Request in session"));
+			return falseEE;
+		}
 
 		// Queue Request
 		currentRequest = {
@@ -69,6 +78,13 @@ module.exports = (function(){
 
 		// Ignore if no current req...
 		if( currentRequest === null ){ return; }
+
+		if( res.type === 'error' ){
+			receivedResult = {
+				"error": res.message
+			};
+			return returnData();
+		}
 
 		// On completely done
 		if( res.type === 'closed' ){
