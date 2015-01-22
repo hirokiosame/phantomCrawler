@@ -1,6 +1,8 @@
 module.exports = (function(){
 
 	var phantomProcess = null,
+		EE = null,
+		port = null,
 		child_process = require('child_process'),
 		spawn = child_process.spawn;
 
@@ -14,13 +16,36 @@ module.exports = (function(){
 		phantomProcess.kill('SIGHUP');
 	});
 
-	return function respawn(EE, serverPort){
+	return function respawn(_EE, _serverPort){
 
 		// Already running
-		if( phantomProcess ){ return true; }
+		if( phantomProcess && _EE === true){
+
+			// Kill process
+			phantomProcess.kill('SIGHUP');
+
+			return;
+		}
+
+		// Save event emitter
+		if(
+			EE === null &&
+			typeof _EE === "object" &&
+			typeof _EE.constructor === "function" &&
+			_EE.constructor.name === "EventEmitter"
+		){
+			// Store EE
+			EE = _EE;
+		}
+
+		// Save port
+		if( port === null ){
+			port = _serverPort;
+		}
+
 
 		// Spawn
-		phantomProcess = spawn('phantomjs', ['--ssl-protocol=any', __dirname + '/phantomCode/index.js', serverPort ]);
+		phantomProcess = spawn('phantomjs', ['--ssl-protocol=any', __dirname + '/phantomCode/index.js', port ]);
 
 		phantomProcess.stdout.on('data', function (data){
 			EE.emit("stdout", phantomProcess.pid, data.toString());	
@@ -37,7 +62,7 @@ module.exports = (function(){
 			phantomProcess = null;
 
 			// Respawn
-			respawn(EE, serverPort);
+			respawn(EE, port);
 		});
 
 		EE.emit("log", "PhantomJS process(" + phantomProcess.pid + ") spawned");

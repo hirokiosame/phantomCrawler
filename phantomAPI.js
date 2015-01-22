@@ -7,6 +7,10 @@ module.exports = (function(){
 		currentRequest = null,
 		receivedResult = null;
 
+
+	var spawnPhantom = require("./spawnPhantom"),
+		timeout = null;
+
 	// Make EE
 	var EE = new events.EventEmitter(),
 		falseEE = { on: function(){} };
@@ -46,11 +50,34 @@ module.exports = (function(){
 		// Ignore if no request is queued
 		if( currentRequest === null ){ return; }
 
+		if( typeof currentRequest.req === "object" &&
+			typeof currentRequest.req.timeout === "number"
+		){
+			timeout = setTimeout(function(){
+
+				// Timeout
+				receivedResult = {
+					"error": "Timeout"
+				};
+
+				// Kill Phantom
+				spawnPhantom(true);
+
+				// Return error
+				returnData();
+
+			}, currentRequest.req.timeout + 1000);
+		}
+
 		// Send req to Phantom
 		socket.send(JSON.stringify(currentRequest.req));
 	}
 
 	function returnData(){
+
+		if( currentRequest === null ){ return; }
+
+		clearTimeout(timeout);
 
 		// Done
 		var _currentRequest = currentRequest;
