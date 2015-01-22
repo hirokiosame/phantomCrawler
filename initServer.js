@@ -23,7 +23,6 @@ module.exports = (function(){
 
 		.on("error", function(err){
 			callback(err);
-			process.exit();
 		})
 
 		.listen(port, function(){
@@ -52,7 +51,7 @@ module.exports = (function(){
 
 		// If no server
 		if( !server ){
-			throw new Error("No server given", server);
+			throw new Error("No server given to to start the WS");
 		}
 
 		// Create Server
@@ -91,6 +90,8 @@ module.exports = (function(){
 	return function init(EE, initialized, API, port){
 		initHTTPServer(EE, function(err, server, port){
 
+			if( err ){ throw new Error(err); }
+			
 			initWebSocket(EE, server, initialized, API);
 		}, port);
 
