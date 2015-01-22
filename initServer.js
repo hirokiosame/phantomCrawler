@@ -8,7 +8,7 @@ module.exports = (function(){
 	
 
 	function randomPort(){
-		return 1025 + Math.random()*(65535+1);
+		return 1025 + ~~(Math.random()*(65535+1));
 	}
 
 	function initHTTPServer( EE, callback, port ){
