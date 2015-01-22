@@ -50,6 +50,10 @@ module.exports = (function(){
 			return initialized(null, HTTPServerPort);
 		}
 
+		// If no server
+		if( !server ){
+			throw new Error("No server given", server);
+		}
 
 		// Create Server
 		WSServer = new ws.Server({ server: server })
