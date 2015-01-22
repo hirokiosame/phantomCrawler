@@ -188,7 +188,7 @@ module.exports = (function(){
 		this.page.onClosing = function(closingPage){
 			self.log({
 				"event": "onClosing",
-				"closingPage": closingPage
+				// "closingPage": closingPage
 			});
 
 			self.closed();
