@@ -30,7 +30,7 @@ module.exports = (function(){
 		.on("error", function(err){
 
 			// If overlap, retry until not in use
-			if( err.code === 'EADDRINUSE' ){
+			if( err.code === 'EADDRINUSE' || err.code === 'EACCES' ){
 				HTTPServer = undefined;
 				initHTTPServer(EE, callback);
 				return;
