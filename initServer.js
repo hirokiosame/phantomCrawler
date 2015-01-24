@@ -35,6 +35,7 @@ module.exports = (function(){
 				initHTTPServer(EE, callback);
 				return;
 			}
+			console.log(err.code);
 			callback(err);
 		})
 
