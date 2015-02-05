@@ -11,12 +11,14 @@ module.exports = (function(){
 	var spawnPhantom = require("./spawnPhantom"),
 		timeout = null;
 
+	var parentEE;
+
 	// Make EE
-	var EE = new events.EventEmitter(),
+	var processEE = new events.EventEmitter(),
 		falseEE = { on: function(){} };
 
 	// EE.setMaxListeners(1);
-	EE.req = function handleRequest(req, callback){
+	processEE.req = function handleRequest(req, callback){
 
 		// Validation
 		if( typeof callback !== "function" ){ throw new Error("Request callback is not a function"); }
@@ -75,19 +77,23 @@ module.exports = (function(){
 
 	function returnData(){
 
+		// If there is no active request, ignore
 		if( currentRequest === null ){ return; }
 
+		// Remove timeout error
 		clearTimeout(timeout);
 
-		// Done
+		// Done, store in temp local var
 		var _currentRequest = currentRequest;
 		currentRequest = null;
 
 		// Remove log listeners
-		EE.removeAllListeners("log");
+		processEE.removeAllListeners("log");
 
 		// Check if there is a result
 		if( receivedResult ){
+
+			parentEE.emit("log", "Websocket successfully received response");
 
 			// Send back
 			_currentRequest.callback(null, receivedResult);
@@ -96,9 +102,11 @@ module.exports = (function(){
 			receivedResult = null;
 		}else{
 
+			parentEE.emit("log", "PhantomJS closed page without result");
+
 			// Sendback error
 			_currentRequest.callback(new Error("PhantomJS page didn't return a result"));
-		}	
+		}
 	}
 
 	function handleResponse(res){
@@ -120,7 +128,7 @@ module.exports = (function(){
 
 		// If received logging message, send as log
 		if( res.type === 'log' ){
-			return EE.emit("log", res);
+			return processEE.emit("log", res);
 		}
 
 		// Otherwise, result
@@ -128,10 +136,13 @@ module.exports = (function(){
 	}
 
 
-	return function(callback){
+	return function(_parentEE, callback){
+
+		// Parent EE
+		parentEE = _parentEE;
 
 		// Pass back API
-		callback(EE);
+		callback(processEE);
 
 		return {
 			handleResponse: handleResponse,

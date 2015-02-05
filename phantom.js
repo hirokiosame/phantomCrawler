@@ -23,7 +23,7 @@ module.exports = (function(){
 		// EE.removeAllListeners();
 
 		// Create Phantom API
-		var API = phantomAPI(callback);
+		var API = phantomAPI(EE, callback);
 
 		// Initialize server
 		initServer(

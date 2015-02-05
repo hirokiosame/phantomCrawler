@@ -90,7 +90,7 @@ module.exports = (function(){
 				API.disconnected();
 			});
 
-			EE.emit("error", "Phantom connected to WS");
+			EE.emit("log", "Phantom connected to WS");
 
 			API.connected(clientSocket);
 		});
